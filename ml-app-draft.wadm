@@ -1,0 +1,94 @@
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: ml-app
+  annotations:
+    version: v0.0.7
+    description: "Demonstrate image processing across two different ML models"
+spec:
+  components:
+    - name: image-ui
+      type: actor
+      properties:
+        image: ghcr.io/liamrandall/image-ui:0.1.0
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
+            spread: []
+        - properties:
+            target: httpserver
+            values:
+              address: 0.0.0.0:8080
+          type: linkdef
+    - name: imagenet-post-processor
+      type: actor
+      properties:
+        image: ghcr.io/liamrandall/imagenetpostprocessor:0.1.0
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
+            spread: []
+    - name: imagenet-pre-processor
+      type: actor
+      properties:
+        image: ghcr.io/liamrandall/imagenetpreprocessor:0.1.0
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
+            spread: []
+    - name: inference-api
+      type: actor
+      properties:
+        image: ghcr.io/liamrandall/inferenceapi:0.1.0
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
+            spread: []
+        - properties:
+            target: httpserver
+            values:
+              address: 0.0.0.0:8080
+          type: linkdef
+        - properties:
+            target: mlinference
+            values:
+          type: linkdef
+    - name: imagenet-pre-processor-rgb
+      type: actor
+      properties:
+        image: ghcr.io/liamrandall/imagenetpreprocrgb8:0.1.0
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
+            spread: []
+    - name: httpserver
+      properties:
+        contract: wasmcloud:httpserver
+        image: cosmonic.azurecr.io/httpserver_wormhole:0.5.4
+      traits:
+        - properties:
+            replicas: 1
+            spread:
+              - name: wormholespread
+                requirements:
+                  cosmonic_managed: 'true'
+          type: spreadscaler
+      type: capability
+    - name: ml-inference-provider
+      properties:
+        contract: wasmcloud:mlinference
+        image: ghcr.io/liamrandall/mlinference:0.1.0
+      traits:
+        - properties:
+            replicas: 1
+            spread:
+              - name: remote
+                requirements:
+                  cosmonic_managed: 'false'
+          type: spreadscaler
+      type: capability
