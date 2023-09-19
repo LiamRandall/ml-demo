@@ -30,6 +30,7 @@
 
 KEYDIR    ?= .keys
 CARGO     ?= cargo
+NPM	      ?= npm
 WASH      ?= wash
 # location of cargo output files
 TARGET_DIR ?= target
@@ -71,6 +72,7 @@ target-file:
 
 # the wasm should be rebuilt if any source files or dependencies change
 $(UNSIGNED_WASM): .FORCE
+	cd ui && $(NPM) run build
 	$(CARGO) build --release
 
 # push signed wasm file to registry
