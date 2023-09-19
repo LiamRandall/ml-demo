@@ -1,4 +1,4 @@
-name = "ml_imagenetpostprocessor"
+name = "ML Imagenet Postprocessor"
 language = "rust"
 type = "actor"
 version = "0.2.0"
